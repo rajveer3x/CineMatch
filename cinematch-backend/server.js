@@ -7,6 +7,12 @@ const connectDB = require('./src/config/database');
 const notFound = require('./src/middleware/notFound');
 const errorHandler = require('./src/middleware/errorHandler');
 
+const authRoutes = require('./src/routes/authRoutes');
+const movieRoutes = require('./src/routes/movieRoutes');
+const ratingRoutes = require('./src/routes/ratingRoutes');
+const watchlistRoutes = require('./src/routes/watchlistRoutes');
+const userRoutes = require('./src/routes/userRoutes');
+
 const rateLimit = require('express-rate-limit');
 const mongoSanitize = require('express-mongo-sanitize');
 const xss = require('xss-clean');
@@ -54,6 +60,12 @@ app.use(express.json({ limit: '10kb' }));
 app.get('/health', (req, res) => {
   res.status(200).json({ status: 'ok' });
 });
+
+app.use('/api/auth', authRoutes);
+app.use('/api/movies', movieRoutes);
+app.use('/api/ratings', ratingRoutes);
+app.use('/api/watchlist', watchlistRoutes);
+app.use('/api/users', userRoutes);
 
 // Middleware for handling 404s
 app.use(notFound);

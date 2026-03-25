@@ -1,0 +1,15 @@
+Testing critic for user 69c2c948ad9c02f088a7acb1 with 3 movies...
+
+--- Critic Explanations ---
+
+Movie 1: Test Movie 0
+Explanation: They'll appreciate the nostalgic value and action-packed sequences reminiscent of their favorite Test Movies.
+
+Movie 2: Test Movie 1
+Explanation: This user will appreciate the clever plot twists in Test Movie 1, mirroring the unexpected action in Test Movie 2.
+
+Movie 3: Test Movie 2
+Explanation: They'll revel in the mind-bending sci-fi action of Test Movie 2, which they've already shown enthusiasm for.
+
+---------------------------
+

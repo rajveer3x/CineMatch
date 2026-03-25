@@ -12,6 +12,7 @@ const movieRoutes = require('./src/routes/movieRoutes');
 const ratingRoutes = require('./src/routes/ratingRoutes');
 const watchlistRoutes = require('./src/routes/watchlistRoutes');
 const userRoutes = require('./src/routes/userRoutes');
+const recommendationRoutes = require('./src/routes/recommendationRoutes');
 
 const rateLimit = require('express-rate-limit');
 const mongoSanitize = require('express-mongo-sanitize');
@@ -66,6 +67,7 @@ app.use('/api/movies', movieRoutes);
 app.use('/api/ratings', ratingRoutes);
 app.use('/api/watchlist', watchlistRoutes);
 app.use('/api/users', userRoutes);
+app.use('/api/recommendations', recommendationRoutes);
 
 // Middleware for handling 404s
 app.use(notFound);

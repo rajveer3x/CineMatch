@@ -27,6 +27,13 @@ const userSchema = new mongoose.Schema({
     type: String,
     default: ''
   },
+  tasteProfileUpdatedAt: {
+    type: Date
+  },
+  lastProfileRatingsCount: {
+    type: Number,
+    default: 0
+  },
   onboardingComplete: {
     type: Boolean,
     default: false

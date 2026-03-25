@@ -25,8 +25,14 @@ const getMovieDetails = async (tmdbId) => {
   return response.data;
 };
 
+const discoverMovies = async (params) => {
+  const response = await tmdbApi.get('/discover/movie', { params });
+  return response.data;
+};
+
 module.exports = {
   fetchPopularMovies,
   searchMovies,
-  getMovieDetails
+  getMovieDetails,
+  discoverMovies
 };

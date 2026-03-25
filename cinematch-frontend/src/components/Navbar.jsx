@@ -22,6 +22,7 @@ export default function Navbar() {
           <div className="flex items-center gap-1">
             <Link to="/dashboard" className={linkClass('/dashboard')}>Dashboard</Link>
             <Link to="/discover" className={linkClass('/discover')}>Discover</Link>
+            <Link to="/profile" className={linkClass('/profile')}>Profile</Link>
           </div>
         </div>
         <div className="flex items-center gap-4">

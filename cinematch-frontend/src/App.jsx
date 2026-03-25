@@ -6,6 +6,7 @@ import Register from './pages/Register';
 import Onboarding from './pages/Onboarding';
 import Dashboard from './pages/Dashboard';
 import Discover from './pages/Discover';
+import Profile from './pages/Profile';
 
 const ProtectedRoute = ({ children }) => {
   const { isAuthenticated, user } = useAuth();
@@ -33,6 +34,7 @@ function App() {
         <Route path="/onboarding" element={<ProtectedRoute><Onboarding /></ProtectedRoute>} />
         <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
         <Route path="/discover" element={<ProtectedRoute><Discover /></ProtectedRoute>} />
+        <Route path="/profile" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
       </Routes>
     </>
   );

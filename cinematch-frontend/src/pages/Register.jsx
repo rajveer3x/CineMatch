@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import api from '../utils/api';
+import getApiErrorMessage from '../utils/getApiErrorMessage';
 
 export default function Register() {
   const [formData, setFormData] = useState({
@@ -64,7 +65,7 @@ export default function Register() {
       login(token, user);
       navigate('/onboarding');
     } catch (err) {
-      setServerError(err.response?.data?.message || 'Registration failed');
+      setServerError(getApiErrorMessage(err, 'Registration failed'));
     } finally {
       setIsLoading(false);
     }

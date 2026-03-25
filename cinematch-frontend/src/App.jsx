@@ -23,12 +23,27 @@ const ProtectedRoute = ({ children }) => {
   return children;
 };
 
+const RootRoute = () => {
+  const { isAuthenticated, user } = useAuth();
+
+  if (!isAuthenticated) {
+    return <Navigate to="/login" replace />;
+  }
+
+  return (
+    <Navigate
+      to={user?.onboardingComplete ? '/dashboard' : '/onboarding'}
+      replace
+    />
+  );
+};
+
 function App() {
   return (
     <>
       <Navbar />
       <Routes>
-        <Route path="/" element={<div>Home</div>} />
+        <Route path="/" element={<RootRoute />} />
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />
         <Route path="/onboarding" element={<ProtectedRoute><Onboarding /></ProtectedRoute>} />

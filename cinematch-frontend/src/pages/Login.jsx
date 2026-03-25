@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import api from '../utils/api';
+import getApiErrorMessage from '../utils/getApiErrorMessage';
 
 export default function Login() {
   const [formData, setFormData] = useState({
@@ -42,7 +43,7 @@ export default function Login() {
         navigate('/onboarding');
       }
     } catch (err) {
-      setError('Invalid credentials');
+      setError(getApiErrorMessage(err, 'Invalid credentials'));
     } finally {
       setIsLoading(false);
     }

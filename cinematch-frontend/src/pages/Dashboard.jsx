@@ -3,6 +3,7 @@ import api from '../utils/api';
 import RatingStars from '../components/RatingStars';
 import WatchlistButton from '../components/WatchlistButton';
 import RecommendationCard from '../components/RecommendationCard';
+import getApiErrorMessage from '../utils/getApiErrorMessage';
 
 const SkeletonCard = () => (
   <div className="bg-neutral-800 rounded-lg overflow-hidden border border-neutral-700 animate-pulse">
@@ -43,7 +44,7 @@ export default function Dashboard() {
         const res = await api.get('/api/movies/popular');
         setPopular(res.data.results);
       } catch (err) {
-        setPopError('Failed to load popular movies.');
+        setPopError(getApiErrorMessage(err, 'Failed to load popular movies.'));
       } finally {
         setIsPopLoading(false);
       }

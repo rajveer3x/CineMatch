@@ -1,26 +1,36 @@
 import { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
 import api from '../utils/api';
+import getApiErrorMessage from '../utils/getApiErrorMessage';
 
 export default function Profile() {
-  const { user } = useAuth();
+  const { user, refreshUser } = useAuth();
   const [topRatings, setTopRatings] = useState([]);
+  const [profileError, setProfileError] = useState('');
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    const fetchProfile = async () => {
+      const profile = await refreshUser();
+      if (!profile) {
+        setProfileError('Failed to load your profile.');
+      }
+    };
+
     const fetchRatings = async () => {
       try {
         const res = await api.get('/api/ratings/me');
         const sorted = res.data.sort((a, b) => b.score - a.score).slice(0, 5);
         setTopRatings(sorted);
       } catch (error) {
-        console.error("Failed to load ratings", error);
+        setProfileError(getApiErrorMessage(error, 'Failed to load your ratings.'));
       } finally {
         setLoading(false);
       }
     };
+    fetchProfile();
     fetchRatings();
-  }, []);
+  }, [refreshUser]);
 
   if (!user) return null;
 
@@ -28,6 +38,11 @@ export default function Profile() {
     <div className="min-h-screen bg-neutral-900 text-white py-12 px-4">
       <div className="max-w-4xl mx-auto space-y-8">
         <h1 className="text-3xl font-bold text-indigo-400">Profile</h1>
+        {profileError && (
+          <div className="rounded-lg border border-red-500/50 bg-red-900/40 p-4 text-sm text-red-200">
+            {profileError}
+          </div>
+        )}
         
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           <div className="bg-neutral-800 p-6 rounded-lg border border-neutral-700 col-span-1 h-fit shadow-md">
@@ -40,12 +55,18 @@ export default function Profile() {
             </div>
           </div>
           
-          <div className="bg-neutral-800 p-6 rounded-lg border border-neutral-700 col-span-2 shadow-md">
+          <div className="bg-neutral-800 p-6 rounded-lg border border-neutral-700 col-span-2 shadow-md min-h-56 flex flex-col">
             <h2 className="text-xl font-semibold mb-4 text-amber-500">Your taste profile</h2>
             {user.tasteProfile ? (
-              <p className="text-neutral-300 italic leading-relaxed text-lg">"{user.tasteProfile}"</p>
+              <div className="flex-1 rounded-xl border border-neutral-700 bg-neutral-900/60 p-5">
+                <p className="text-neutral-200 leading-8 text-base sm:text-lg whitespace-pre-wrap">
+                  {user.tasteProfile}
+                </p>
+              </div>
             ) : (
-              <p className="text-neutral-500 italic">No taste profile generated yet. Rate more movies or visit your dashboard to generate one.</p>
+              <div className="flex flex-1 items-center rounded-xl border border-dashed border-neutral-700 bg-neutral-900/40 p-5">
+                <p className="text-neutral-400 leading-7">No taste profile generated yet. Rate more movies and refresh recommendations from the dashboard to generate one.</p>
+              </div>
             )}
           </div>
         </div>
@@ -66,8 +87,10 @@ export default function Profile() {
                   <div className="absolute top-2 right-2 bg-indigo-600/90 backdrop-blur-sm px-2 py-0.5 rounded text-xs font-bold text-white shadow-sm">
                     ⭐ {rating.score}
                   </div>
-                  <div className="p-3 truncate text-sm font-semibold text-neutral-200">
-                    {rating.movieId?.title}
+                  <div className="min-h-20 p-3">
+                    <p className="text-sm font-semibold text-neutral-200 line-clamp-2">
+                      {rating.movieId?.title}
+                    </p>
                   </div>
                 </div>
               ))}

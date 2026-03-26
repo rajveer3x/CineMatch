@@ -8,6 +8,9 @@ import Dashboard from './pages/Dashboard';
 import Discover from './pages/Discover';
 import Profile from './pages/Profile';
 
+const hasCompletedTasteOnboarding = (user) =>
+  Boolean(user?.onboardingComplete || user?.preferenceMovieIds?.length >= 5);
+
 const ProtectedRoute = ({ children }) => {
   const { isAuthenticated, user } = useAuth();
   const location = useLocation();
@@ -16,7 +19,7 @@ const ProtectedRoute = ({ children }) => {
     return <Navigate to="/login" replace />;
   }
 
-  if (!user?.onboardingComplete && location.pathname !== '/onboarding') {
+  if (!hasCompletedTasteOnboarding(user) && location.pathname !== '/onboarding') {
     return <Navigate to="/onboarding" replace />;
   }
 
@@ -32,7 +35,7 @@ const RootRoute = () => {
 
   return (
     <Navigate
-      to={user?.onboardingComplete ? '/dashboard' : '/onboarding'}
+      to={hasCompletedTasteOnboarding(user) ? '/dashboard' : '/onboarding'}
       replace
     />
   );

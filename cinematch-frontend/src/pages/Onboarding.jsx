@@ -1,214 +1,190 @@
-import { useState, useEffect, useRef, useCallback } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import SelectableMovieCard from '../components/SelectableMovieCard';
 import { useAuth } from '../context/AuthContext';
 import api from '../utils/api';
-import RatingStars from '../components/RatingStars';
 import getApiErrorMessage from '../utils/getApiErrorMessage';
+
+const MIN_SELECTIONS = 5;
+const MAX_SELECTIONS = 15;
 
 export default function Onboarding() {
   const [movies, setMovies] = useState([]);
-  const [searchQuery, setSearchQuery] = useState('');
-  const [searchResults, setSearchResults] = useState([]);
-  const [isSearchLoading, setIsSearchLoading] = useState(false);
-  const [hasSearched, setHasSearched] = useState(false);
+  const [selectedMovies, setSelectedMovies] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
-  const [isCompleting, setIsCompleting] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState('');
-  const [ratedMovieIds, setRatedMovieIds] = useState([]);
-  const searchDebounceRef = useRef(null);
 
-  const { updateUser } = useAuth();
+  const { user, updateUser } = useAuth();
   const navigate = useNavigate();
 
   useEffect(() => {
     const fetchMovies = async () => {
       try {
         const res = await api.get('/api/movies/popular');
-        setMovies(res.data.results.slice(0, 10));
+        setMovies(res.data.results.slice(0, 20));
       } catch (err) {
-        setError(getApiErrorMessage(err, 'Failed to load movies'));
+        setError(getApiErrorMessage(err, 'Failed to load movies.'));
       } finally {
         setIsLoading(false);
       }
     };
+
     fetchMovies();
   }, []);
 
-  const searchMovies = useCallback(async (value) => {
-    if (!value.trim()) {
-      setSearchResults([]);
-      setHasSearched(false);
+  useEffect(() => {
+    if (user?.onboardingComplete || user?.preferenceMovieIds?.length >= MIN_SELECTIONS) {
+      navigate('/dashboard', { replace: true });
       return;
     }
 
-    setIsSearchLoading(true);
-    setError('');
-    try {
-      const res = await api.get('/api/movies/search', {
-        params: { query: value }
-      });
-      setSearchResults(res.data.results || []);
-      setHasSearched(true);
-    } catch (err) {
-      setError(getApiErrorMessage(err, 'Failed to search movies'));
-    } finally {
-      setIsSearchLoading(false);
+    if (user?.preferenceMovieIds?.length) {
+      setSelectedMovies(user.preferenceMovieIds.slice(0, MAX_SELECTIONS));
     }
-  }, []);
+  }, [navigate, user]);
 
-  useEffect(() => {
-    return () => {
-      if (searchDebounceRef.current) {
-        clearTimeout(searchDebounceRef.current);
+  const selectedCount = selectedMovies.length;
+  const isContinueEnabled = selectedCount >= MIN_SELECTIONS;
+
+  const progressMessage = useMemo(() => {
+    if (selectedCount >= MAX_SELECTIONS) {
+      return `You have reached the ${MAX_SELECTIONS}-movie cap.`;
+    }
+
+    if (isContinueEnabled) {
+      return 'Your first recommendation set is ready.';
+    }
+
+    return `Select ${MIN_SELECTIONS - selectedCount} more movie${MIN_SELECTIONS - selectedCount === 1 ? '' : 's'} to continue.`;
+  }, [isContinueEnabled, selectedCount]);
+
+  const toggleMovieSelection = (tmdbId) => {
+    setError('');
+    setSelectedMovies((current) => {
+      if (current.includes(tmdbId)) {
+        return current.filter((id) => id !== tmdbId);
       }
-    };
-  }, []);
 
-  const handleSearchChange = (e) => {
-    const value = e.target.value;
-    setSearchQuery(value);
+      if (current.length >= MAX_SELECTIONS) {
+        return current;
+      }
 
-    if (searchDebounceRef.current) {
-      clearTimeout(searchDebounceRef.current);
+      return [...current, tmdbId];
+    });
+  };
+
+  const handleContinue = async () => {
+    if (!isContinueEnabled) {
+      return;
     }
 
-    searchDebounceRef.current = setTimeout(() => {
-      searchMovies(value);
-    }, 400);
-  };
-
-  const handleRated = (tmdbId) => {
-    setRatedMovieIds((prev) => (
-      prev.includes(tmdbId) ? prev : [...prev, tmdbId]
-    ));
-  };
-
-  const handleComplete = async () => {
-    setIsCompleting(true);
+    setIsSubmitting(true);
     setError('');
+
     try {
-      await api.post('/api/users/complete-onboarding');
-      updateUser({ onboardingComplete: true });
+      const res = await api.post('/api/users/preferences', {
+        movieIds: selectedMovies
+      });
+
+      updateUser(res.data);
       navigate('/dashboard');
     } catch (err) {
-      setError(getApiErrorMessage(err, 'Failed to complete onboarding'));
+      setError(getApiErrorMessage(err, 'Failed to save your movie preferences.'));
     } finally {
-      setIsCompleting(false);
+      setIsSubmitting(false);
     }
   };
-
-  const progress = Math.min(ratedMovieIds.length, 5);
 
   if (isLoading) {
     return (
-      <div className="flex justify-center items-center min-h-screen bg-neutral-900 text-white">
-        <p className="text-lg text-neutral-400">Loading movies...</p>
+      <div className="flex min-h-screen items-center justify-center bg-[#0b0d14] text-white">
+        <div className="space-y-4 text-center">
+          <div className="mx-auto h-10 w-10 animate-spin rounded-full border-2 border-[#f3c56b] border-t-transparent" />
+          <p className="text-sm uppercase tracking-[0.35em] text-neutral-400">Loading movies</p>
+        </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-neutral-900 text-white">
-      <div className="max-w-5xl mx-auto px-4 py-10">
-        <h1 className="text-3xl font-bold text-center text-indigo-400 mb-2">Welcome to CineMatch!</h1>
-        <p className="text-center text-neutral-400 mb-8">Rate at least 5 movies so we can learn your taste. You can use the starter picks below or search for your own favorites.</p>
-
-        {/* Progress bar */}
-        <div className="mb-8">
-          <div className="flex justify-between text-sm text-neutral-400 mb-2">
-            <span>{progress} of 5 movies rated</span>
-            <span>{progress >= 5 ? '✓ Ready!' : `${5 - progress} more to go`}</span>
-          </div>
-          <div className="w-full bg-neutral-700 rounded-full h-3">
-            <div
-              className="bg-indigo-500 h-3 rounded-full transition-all duration-500"
-              style={{ width: `${(progress / 5) * 100}%` }}
-            />
-          </div>
-        </div>
-
-        {error && <div className="mb-6 p-3 text-sm text-red-200 bg-red-900/50 border border-red-500/50 rounded">{error}</div>}
-
-        <div className="mb-10 rounded-2xl border border-neutral-800 bg-neutral-900/70 p-5">
-          <div className="mb-4">
-            <h2 className="text-xl font-semibold text-white">Search and rate any movie</h2>
-            <p className="mt-1 text-sm text-neutral-400">Can’t find your favorites below? Search the full catalog here.</p>
-          </div>
-
-          <div className="relative mb-6">
-            <input
-              type="text"
-              value={searchQuery}
-              onChange={handleSearchChange}
-              placeholder="Search by movie title..."
-              className="w-full rounded-xl border border-neutral-700 bg-neutral-800 p-4 pl-12 text-white outline-none transition-all placeholder:text-neutral-500 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500"
-            />
-            <svg className="absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-neutral-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-            </svg>
-          </div>
-
-          {isSearchLoading && (
-            <div className="flex justify-center py-8">
-              <div className="h-8 w-8 animate-spin rounded-full border-2 border-indigo-400 border-t-transparent" />
-            </div>
-          )}
-
-          {!isSearchLoading && hasSearched && searchResults.length === 0 && (
-            <div className="rounded-xl border border-neutral-800 bg-neutral-800/60 p-6 text-center text-neutral-400">
-              No movies found for "{searchQuery}".
-            </div>
-          )}
-
-          {!isSearchLoading && searchResults.length > 0 && (
-            <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5">
-              {searchResults.slice(0, 10).map((movie) => (
-                <div key={movie.id} className="overflow-hidden rounded-lg border border-neutral-700 bg-neutral-800 transition-colors hover:border-indigo-500/50">
-                  <img
-                    src={movie.poster_path ? `https://image.tmdb.org/t/p/w300${movie.poster_path}` : 'https://via.placeholder.com/300x450?text=No+Poster'}
-                    alt={movie.title}
-                    className="w-full aspect-[2/3] object-cover"
-                  />
-                  <div className="p-3">
-                    <h3 className="mb-1 truncate text-sm font-medium text-white" title={movie.title}>{movie.title}</h3>
-                    {movie.release_date && (
-                      <p className="mb-2 text-xs text-neutral-500">{new Date(movie.release_date).getFullYear()}</p>
-                    )}
-                    <RatingStars tmdbId={movie.id} onRated={() => handleRated(movie.id)} />
-                  </div>
-                </div>
-              ))}
-            </div>
-          )}
-        </div>
-
-        {/* Movie grid */}
-        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4 mb-10">
-          {movies.map(movie => (
-            <div key={movie._id || movie.tmdbId} className="bg-neutral-800 rounded-lg overflow-hidden border border-neutral-700 hover:border-indigo-500/50 transition-colors">
-              <img
-                src={movie.posterPath ? `https://image.tmdb.org/t/p/w300${movie.posterPath}` : 'https://via.placeholder.com/300x450?text=No+Poster'}
-                alt={movie.title}
-                className="w-full aspect-[2/3] object-cover"
-              />
-              <div className="p-3">
-                <h3 className="text-sm font-medium text-white truncate mb-2" title={movie.title}>{movie.title}</h3>
-                <RatingStars tmdbId={movie.tmdbId} onRated={() => handleRated(movie.tmdbId)} />
+    <div className="min-h-screen bg-[radial-gradient(circle_at_top,_rgba(243,197,107,0.18),_transparent_30%),linear-gradient(180deg,_#090b12_0%,_#111629_55%,_#090b12_100%)] text-white">
+      <div className="mx-auto max-w-7xl px-4 py-10 sm:px-6 lg:px-8">
+        <div className="mb-10 overflow-hidden rounded-[2rem] border border-white/10 bg-white/[0.04] shadow-[0_24px_90px_rgba(0,0,0,0.35)] backdrop-blur-sm">
+          <div className="grid gap-8 px-6 py-8 lg:grid-cols-[1.35fr_0.65fr] lg:px-10 lg:py-10">
+            <div className="space-y-4">
+              <p className="text-xs font-semibold uppercase tracking-[0.45em] text-[#f3c56b]">CineMatch Setup</p>
+              <div className="space-y-3">
+                <h1 className="text-4xl font-black tracking-tight text-white sm:text-5xl">Tell us what you like</h1>
+                <p className="max-w-2xl text-base leading-7 text-neutral-300 sm:text-lg">
+                  Select at least 5 movies to personalize your recommendations. We&apos;ll use these picks to shape the dashboard instead of dropping you into generic results.
+                </p>
               </div>
             </div>
+
+            <div className="rounded-[1.5rem] border border-white/10 bg-black/25 p-5">
+              <div className="flex items-center justify-between text-sm text-neutral-300">
+                <span>Selected movies</span>
+                <span className="font-semibold text-white">{selectedCount} / {MAX_SELECTIONS}</span>
+              </div>
+              <div className="mt-4 h-3 overflow-hidden rounded-full bg-white/10">
+                <div
+                  className="h-full rounded-full bg-gradient-to-r from-[#f3c56b] via-[#ee8f68] to-[#e35b61] transition-all duration-300"
+                  style={{ width: `${Math.min((selectedCount / MIN_SELECTIONS) * 100, 100)}%` }}
+                />
+              </div>
+              <p className="mt-4 text-sm leading-6 text-neutral-400">{progressMessage}</p>
+              <button
+                type="button"
+                onClick={handleContinue}
+                disabled={!isContinueEnabled || isSubmitting}
+                className="mt-6 inline-flex w-full items-center justify-center rounded-full bg-[#f3c56b] px-5 py-3 text-sm font-bold text-[#1d1620] transition hover:bg-[#ffd88a] disabled:cursor-not-allowed disabled:bg-[#6e654b] disabled:text-neutral-300"
+              >
+                {isSubmitting ? 'Saving your taste...' : 'Continue'}
+              </button>
+              <p className="mt-3 text-xs leading-5 text-neutral-500">
+                You only do this once unless preferences are reset later.
+              </p>
+            </div>
+          </div>
+        </div>
+
+        {error ? (
+          <div className="mb-6 rounded-2xl border border-red-500/40 bg-red-950/40 px-4 py-3 text-sm text-red-100">
+            {error}
+          </div>
+        ) : null}
+
+        <div className="mb-6 flex flex-wrap items-end justify-between gap-4">
+          <div>
+            <h2 className="text-2xl font-bold text-white">Popular right now</h2>
+            <p className="mt-1 text-sm text-neutral-400">
+              Pick the movies you already know you love. Each selection becomes a strong signal for your first recommendation batch.
+            </p>
+          </div>
+          <p className="text-sm text-neutral-500">Minimum 5 movies, maximum 15 movies</p>
+        </div>
+
+        <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
+          {movies.map((movie) => (
+            <SelectableMovieCard
+              key={movie.tmdbId}
+              movie={movie}
+              isSelected={selectedMovies.includes(movie.tmdbId)}
+              onToggle={() => toggleMovieSelection(movie.tmdbId)}
+            />
           ))}
         </div>
 
-        {/* Continue button */}
-        <div className="text-center">
+        <div className="mt-10 rounded-[1.5rem] border border-white/10 bg-black/20 p-4 sm:hidden">
           <button
-            onClick={handleComplete}
-            disabled={progress < 5 || isCompleting}
-            className="px-8 py-3 text-lg font-medium bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+            type="button"
+            onClick={handleContinue}
+            disabled={!isContinueEnabled || isSubmitting}
+            className="inline-flex w-full items-center justify-center rounded-full bg-[#f3c56b] px-5 py-3 text-sm font-bold text-[#1d1620] transition hover:bg-[#ffd88a] disabled:cursor-not-allowed disabled:bg-[#6e654b] disabled:text-neutral-300"
           >
-            {isCompleting ? 'Completing...' : 'Continue to Dashboard →'}
+            {isSubmitting ? 'Saving your taste...' : `Continue with ${selectedCount} picks`}
           </button>
-          {progress < 5 && <p className="mt-3 text-sm text-neutral-500">Rate {5 - progress} more movie{5 - progress > 1 ? 's' : ''} to unlock</p>}
         </div>
       </div>
     </div>

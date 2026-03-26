@@ -38,6 +38,10 @@ const userSchema = new mongoose.Schema({
     type: Boolean,
     default: false
   },
+  preferenceMovieIds: {
+    type: [Number],
+    default: []
+  },
   ratingsCount: {
     type: Number,
     default: 0

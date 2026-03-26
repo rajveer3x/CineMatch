@@ -4,6 +4,9 @@ import { useAuth } from '../context/AuthContext';
 export default function Navbar() {
   const { isAuthenticated, user, logout } = useAuth();
   const location = useLocation();
+  const hasCompletedOnboarding = Boolean(
+    user?.onboardingComplete || user?.preferenceMovieIds?.length >= 5
+  );
 
   if (!isAuthenticated) return null;
 
@@ -18,11 +21,22 @@ export default function Navbar() {
     <nav className="bg-neutral-800 border-b border-neutral-700 sticky top-0 z-50">
       <div className="max-w-6xl mx-auto px-4 h-14 flex items-center justify-between">
         <div className="flex items-center gap-6">
-          <Link to="/dashboard" className="text-lg font-bold text-indigo-400 tracking-tight">CineMatch</Link>
+          <Link
+            to={hasCompletedOnboarding ? '/dashboard' : '/onboarding'}
+            className="text-lg font-bold text-indigo-400 tracking-tight"
+          >
+            CineMatch
+          </Link>
           <div className="flex items-center gap-1">
-            <Link to="/dashboard" className={linkClass('/dashboard')}>Dashboard</Link>
-            <Link to="/discover" className={linkClass('/discover')}>Discover</Link>
-            <Link to="/profile" className={linkClass('/profile')}>Profile</Link>
+            {hasCompletedOnboarding ? (
+              <>
+                <Link to="/dashboard" className={linkClass('/dashboard')}>Dashboard</Link>
+                <Link to="/discover" className={linkClass('/discover')}>Discover</Link>
+                <Link to="/profile" className={linkClass('/profile')}>Profile</Link>
+              </>
+            ) : (
+              <Link to="/onboarding" className={linkClass('/onboarding')}>Onboarding</Link>
+            )}
           </div>
         </div>
         <div className="flex items-center gap-4">

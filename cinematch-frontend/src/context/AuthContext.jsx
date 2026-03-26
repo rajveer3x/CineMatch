@@ -1,6 +1,6 @@
 import { createContext, useState, useContext, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { setAuthToken, setLogoutCallback } from '../utils/api';
+import api, { setAuthToken, setLogoutCallback } from '../utils/api';
 
 const AuthContext = createContext(null);
 const AUTH_STORAGE_KEY = 'cinematch-auth';
@@ -46,6 +46,23 @@ export function AuthProvider({ children }) {
     localStorage.removeItem(AUTH_STORAGE_KEY);
   }, [token, user]);
 
+  const refreshUser = useCallback(async () => {
+    if (!token) return null;
+
+    try {
+      const res = await api.get('/api/users/me');
+      setUser(res.data);
+      return res.data;
+    } catch (error) {
+      return null;
+    }
+  }, [token]);
+
+  useEffect(() => {
+    if (!token) return;
+    refreshUser();
+  }, [token, refreshUser]);
+
   const login = (newToken, userData) => {
     setTokenState(newToken);
     setUser(userData);
@@ -62,7 +79,8 @@ export function AuthProvider({ children }) {
     isAuthenticated: !!token,
     login,
     logout,
-    updateUser
+    updateUser,
+    refreshUser
   };
 
   return (

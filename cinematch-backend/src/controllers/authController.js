@@ -47,7 +47,9 @@ const register = async (req, res, next) => {
         id: user._id,
         username: user.username,
         email: user.email,
-        onboardingComplete: user.onboardingComplete
+        onboardingComplete: user.onboardingComplete,
+        preferenceMovieIds: user.preferenceMovieIds,
+        ratingsCount: user.ratingsCount
       }
     });
   } catch (error) {
@@ -81,7 +83,9 @@ const login = async (req, res, next) => {
         id: user._id,
         username: user.username,
         email: user.email,
-        onboardingComplete: user.onboardingComplete
+        onboardingComplete: user.onboardingComplete,
+        preferenceMovieIds: user.preferenceMovieIds,
+        ratingsCount: user.ratingsCount
       }
     });
   } catch (error) {

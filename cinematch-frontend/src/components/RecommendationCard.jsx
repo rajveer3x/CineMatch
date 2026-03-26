@@ -38,11 +38,10 @@ export default function RecommendationCard({ item }) {
 
         {explanation ? (
           <div className="relative group/tooltip flex-1">
-            <p className="text-sm italic text-neutral-400 line-clamp-2 mt-2 bg-neutral-900/50 p-2 rounded border border-neutral-700 hover:text-neutral-200 transition-colors cursor-help">
+            <p className="mt-2 min-h-28 rounded border border-neutral-700 bg-neutral-900/50 p-3 text-sm leading-6 text-neutral-300 line-clamp-4 hover:text-neutral-100 transition-colors cursor-help">
               "{explanation}"
             </p>
-            {/* Tooltip on hover */}
-            <div className="absolute top-[-10px] left-1/2 -translate-x-1/2 -translate-y-full w-64 bg-neutral-950 text-neutral-200 text-xs rounded p-3 opacity-0 group-hover/tooltip:opacity-100 transition-opacity pointer-events-none z-10 shadow-xl border border-neutral-700">
+            <div className="absolute top-[-10px] left-1/2 z-10 w-72 -translate-x-1/2 -translate-y-full rounded border border-neutral-700 bg-neutral-950 p-3 text-xs text-neutral-200 opacity-0 shadow-xl transition-opacity pointer-events-none group-hover/tooltip:opacity-100">
               <span className="font-bold text-indigo-400 block mb-1">Why this?</span>
               {explanation}
             </div>

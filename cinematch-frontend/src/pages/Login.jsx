@@ -1,73 +1,110 @@
-import { useState } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
-import { useAuth } from '../context/AuthContext';
-import api from '../utils/api';
-import getApiErrorMessage from '../utils/getApiErrorMessage';
+import React from 'react';
+import { NavLink } from 'react-router-dom';
 
 export default function Login() {
-  const [formData, setFormData] = useState({
-    email: '',
-    password: ''
-  });
-  const [error, setError] = useState('');
-  const [isLoading, setIsLoading] = useState(false);
-  
-  const { login } = useAuth();
-  const navigate = useNavigate();
-
-  const handleChange = (e) => {
-    setFormData({ ...formData, [e.target.name]: e.target.value });
-    if (error) setError('');
-  };
-
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    setError('');
-
-    if (!formData.email || !formData.password) {
-      setError('Please fill in all fields');
-      return;
-    }
-
-    setIsLoading(true);
-    try {
-      const response = await api.post('/api/auth/login', {
-        email: formData.email,
-        password: formData.password
-      });
-      const { token, user } = response.data;
-      login(token, user);
-      if (user.onboardingComplete) {
-        navigate('/dashboard');
-      } else {
-        navigate('/onboarding');
-      }
-    } catch (err) {
-      setError(getApiErrorMessage(err, 'Invalid credentials'));
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
   return (
-    <div className="flex justify-center items-center min-h-screen bg-neutral-900 text-white">
-      <div className="w-full max-w-md p-8 space-y-6 bg-neutral-800 rounded-lg shadow-xl border border-neutral-700">
-        <h2 className="text-3xl font-bold text-center text-indigo-400">Login</h2>
-        {error && <div className="p-3 text-sm text-red-200 bg-red-900/50 border border-red-500/50 rounded">{error}</div>}
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <div>
-            <label className="block text-sm font-medium text-neutral-300">Email</label>
-            <input type="email" name="email" value={formData.email} onChange={handleChange} className="w-full p-2.5 mt-1 bg-neutral-900 border border-neutral-600 rounded focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition-all" placeholder="john@example.com" />
+    <div className="min-h-screen bg-background flex flex-col lg:flex-row antialiased font-manrope selection:bg-primary/30 selection:text-primary-fixed text-on-surface">
+      
+      {/* Left side: Cinematic Hero Immersive Background */}
+      <div className="relative w-full lg:w-[55%] flex-shrink-0 min-h-[40vh] lg:min-h-screen flex items-center justify-center overflow-hidden">
+        {/* Background Image / Overlay */}
+        <div className="absolute inset-0 bg-surface-container-lowest">
+          {/* A cinematic placeholder gradient or image for the film vibe */}
+          <div 
+            className="absolute inset-0 bg-cover bg-center bg-no-repeat opacity-[0.35] mix-blend-luminosity"
+            style={{ 
+              backgroundImage: `url('https://images.unsplash.com/photo-1536440136628-849c177e76a1?q=80&w=2625&auto=format&fit=crop')` 
+            }}
+          ></div>
+          {/* Deep shadow gradient blending into the right panel */}
+          <div className="absolute inset-0 bg-gradient-to-t lg:bg-gradient-to-r from-background via-background/80 to-transparent"></div>
+        </div>
+        
+        {/* Cinematic Branding */}
+        <div className="relative z-10 w-full max-w-lg px-8 text-center lg:text-left mt-10 lg:mt-0">
+          <div className="flex items-center justify-center lg:justify-start gap-4 mb-6">
+            <div className="w-14 h-14 rounded-xl bg-primary-gradient flex items-center justify-center shadow-[0_0_40px_rgba(245,158,11,0.35)]">
+              <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="text-on-primary">
+                <rect width="18" height="18" x="3" y="3" rx="2" />
+                <path d="M7 3v18M17 3v18M3 9h18M3 15h18" />
+              </svg>
+            </div>
+            <h1 className="font-newsreader text-5xl lg:text-7xl font-bold tracking-tight text-on-surface">
+              CineMatch
+            </h1>
           </div>
-          <div>
-            <label className="block text-sm font-medium text-neutral-300">Password</label>
-            <input type="password" name="password" value={formData.password} onChange={handleChange} className="w-full p-2.5 mt-1 bg-neutral-900 border border-neutral-600 rounded focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition-all" placeholder="••••••••" />
+          <p className="text-xl lg:text-2xl font-light text-on-surface-variant max-w-sm mx-auto lg:mx-0">
+            Your personal AI movie guide.
+          </p>
+        </div>
+      </div>
+
+      {/* Right side: Login Form */}
+      <div className="relative flex-1 flex flex-col justify-center px-6 py-12 sm:px-12 lg:px-24 bg-background z-10">
+        
+        {/* Soft immersive glow for the form panel */}
+        <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-primary/5 rounded-full blur-[120px] pointer-events-none"></div>
+
+        <div className="w-full max-w-md mx-auto relative z-10">
+          <h2 className="font-newsreader text-4xl font-bold mb-3">Welcome Back</h2>
+          <p className="text-on-surface-variant mb-10 text-base">Enter your credentials to access your library.</p>
+          
+          <form className="space-y-6" onSubmit={(e) => e.preventDefault()}>
+            <div className="space-y-2">
+              <label className="text-sm font-medium text-on-surface-variant block tracking-wide">EMAIL ADDRESS</label>
+              <input 
+                type="email" 
+                placeholder="aria@example.com"
+                className="w-full h-14 bg-surface-container-low border border-outline-variant/[0.15] rounded-xl px-5 text-on-surface placeholder:text-outline-variant/60 focus:outline-none focus:ring-1 focus:ring-primary/60 focus:border-primary/60 transition-all font-manrope"
+              />
+            </div>
+
+            <div className="space-y-2">
+              <div className="flex justify-between items-center">
+                <label className="text-sm font-medium text-on-surface-variant block tracking-wide">PASSWORD</label>
+                <a href="#" className="text-sm font-semibold text-primary hover:text-primary-fixed transition-colors">Forgot?</a>
+              </div>
+              <input 
+                type="password" 
+                placeholder="••••••••"
+                className="w-full h-14 bg-surface-container-low border border-outline-variant/[0.15] rounded-xl px-5 text-on-surface placeholder:text-outline-variant/60 focus:outline-none focus:ring-1 focus:ring-primary/60 focus:border-primary/60 transition-all font-manrope"
+              />
+            </div>
+
+            <button className="w-full h-14 bg-primary-gradient rounded-xl text-on-primary font-bold text-[1rem] shadow-[0_6_20px_rgba(245,158,11,0.25)] hover:shadow-[0_8_28px_rgba(245,158,11,0.4)] hover:-translate-y-[1px] transition-all flex items-center justify-center gap-2 mt-8">
+              Sign In
+              <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M5 12h14" />
+                <path d="m12 5 7 7-7 7" />
+              </svg>
+            </button>
+          </form>
+
+          <div className="mt-10 relative">
+            <div className="absolute inset-0 flex items-center">
+              <div className="w-full border-t border-outline-variant/[0.15]"></div>
+            </div>
+            <div className="relative flex justify-center text-sm">
+              <span className="bg-background px-4 text-on-surface-variant font-medium">Or continue with</span>
+            </div>
           </div>
-          <button type="submit" disabled={isLoading} className="w-full py-3 mt-4 text-white font-medium bg-indigo-600 hover:bg-indigo-700 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed">
-            {isLoading ? 'Logging in...' : 'Sign In'}
-          </button>
-        </form>
-        <p className="text-sm text-center text-neutral-400">Don't have an account? <Link to="/register" className="text-indigo-400 hover:text-indigo-300 transition-colors">Register here</Link></p>
+
+          <div className="mt-8 grid grid-cols-2 gap-4">
+            <button className="h-12 flex items-center justify-center rounded-xl border border-outline-variant/[0.2] bg-surface-container-low hover:bg-surface-container-highest focus:outline-none focus:ring-1 focus:ring-primary/50 transition-colors group">
+              <span className="text-sm font-semibold text-on-surface group-hover:text-primary transition-colors">Google</span>
+            </button>
+            <button className="h-12 flex items-center justify-center rounded-xl border border-outline-variant/[0.2] bg-surface-container-low hover:bg-surface-container-highest focus:outline-none focus:ring-1 focus:ring-primary/50 transition-colors group">
+               <span className="text-sm font-semibold text-on-surface group-hover:text-primary transition-colors">Apple</span>
+            </button>
+          </div>
+
+          <div className="mt-12 text-center text-sm text-on-surface-variant">
+            New to CineMatch?{' '}
+            <NavLink to="/register" className="font-semibold text-primary hover:text-primary-fixed transition-colors">
+              Register here
+            </NavLink>
+          </div>
+        </div>
       </div>
     </div>
   );

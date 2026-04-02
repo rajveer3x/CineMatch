@@ -42,9 +42,12 @@ const RootRoute = () => {
 };
 
 function App() {
+  const location = useLocation();
+  const hideNavbar = ['/login', '/register'];
+
   return (
     <>
-      <Navbar />
+      {!hideNavbar.includes(location.pathname) && <Navbar />}
       <Routes>
         <Route path="/" element={<RootRoute />} />
         <Route path="/login" element={<Login />} />
